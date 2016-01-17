@@ -9,7 +9,7 @@ Author URI: http://www.prophoto.com
 License: GPLv2
 */
 
-if (pp_td_theme_installed('prophoto5') && pp_td_theme_installed('prophoto6')) {
+if (pp_td_theme_installed('prophoto5') && pp_td_theme_installed('prophoto6') && pp_td_site_p6_ready()) {
     add_action('plugins_loaded', 'pp_td_init');
 }
 
@@ -21,6 +21,20 @@ if (pp_td_theme_installed('prophoto5') && pp_td_theme_installed('prophoto6')) {
  */
 function pp_td_theme_installed($themeDir) {
     return file_exists(WP_CONTENT_DIR . "/themes/$themeDir/style.css");
+}
+
+/**
+ * Is the site capable of running ProPhoto 6?
+ *
+ * @return boolean
+ */
+function pp_td_site_p6_ready() {
+    $phpCompatible = function_exists('stream_supports_lock');
+    $wpCompatible = function_exists('__return_empty_string');
+    $gdCompatible = function_exists('imagecreatetruecolor');
+    $jsonCompatible = extension_loaded('json');
+
+    return $phpCompatible && $wpCompatible && $gdCompatible && $jsonCompatible;
 }
 
 /**
