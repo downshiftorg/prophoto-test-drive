@@ -9,7 +9,7 @@ Author URI: http://www.prophoto.com
 License: GPLv2
 */
 
-if (pp_td_theme_installed('prophoto6') && pp_td_theme_installed('prophoto5')) {
+if (pp_td_theme_installed('prophoto5') && pp_td_theme_installed('prophoto6')) {
     add_action('plugins_loaded', 'pp_td_init');
 }
 
@@ -138,7 +138,27 @@ function pp_td_p5_admin_notice() {
  * @return string
  */
 function pp_td_admin_notice($msg) {
-    return '<div class="updated pp-admin-msg"><p style="margin: 0.75em 0;">' . $msg . '</p></div>';
+    return pp_td_admin_msg($msg, 'updated');
+}
+
+/**
+ * Helper function for rendering a formatted admin error in ProPhoto 5 or 6
+ *
+ * @param string $msg
+ * @return string
+ */
+function pp_td_admin_error($msg) {
+    return pp_td_admin_msg($msg, 'error');
+}
+
+/**
+ * Helper function for rendering a formatted admin message in ProPhoto 5 or 6
+ *
+ * @param string $msg
+ * @return string
+ */
+function pp_td_admin_msg($msg, $class) {
+    return "<div class='$class pp-admin-msg'><p style='margin: 0.75em'>$msg</p></div>";
 }
 
 /**
@@ -162,12 +182,43 @@ class ProPhotoTestDriveAdminMiddleware
     public function addAdminNotice()
     {
         $deactivateTdMode = admin_url('?pp_td_deactivate_td_mode=1');
+
+        if (! $this->p6SiteRegistered()) {
+            $activate = admin_url('themes.php?activated=true');
+            $msg  = 'You are currently <b>test-driving ProPhoto 6</b>, but ProPhoto 6 ';
+            $msg .= 'is <b style="text-decoration: underline;">not registered.</b> ';
+            $msg .= 'This means you will not receive critical updates and bugfixes. ';
+            $msg .= "To register <a href='$activate'>click here</a>, or you may choose instead to ";
+            $msg .= "<a href='$deactivateTdMode'>switch out of test-drive mode</a>.";
+            echo pp_td_admin_error($msg);
+            return;
+        }
+
         $activateP6 = admin_url('?pp_td_activate_p6=1');
-        $msg  = 'You are currently <b>test-driving ProPhoto 6</b>. ';
+        $msg  = 'You are currently <b style="text-decoration: underline;">test-driving ProPhoto 6</b>. ';
         $msg .= 'Logged-in users can see and customize P6, but all normal ';
         $msg .= 'site visitors will see your P5 site. ';
         $msg .= "<a href='$deactivateTdMode'>Click here</a> to switch out of test-drive mode, or ";
         $msg .= "<a href='$activateP6'>here</a> to fully activate P6 for all users.";
         echo pp_td_admin_notice($msg);
+    }
+
+    /**
+     * Is the ProPhoto 6 site registeredd
+     *
+     * Make a container instead of type-hinting the constructor because this plugin can run
+     * in PHP 5.2 environments that choke on namespace syntax.
+     *
+     * @return boolean
+     */
+    protected function p6SiteRegistered()
+    {
+        try {
+            $container = include(WP_CONTENT_DIR . '/themes/prophoto6/services.php');
+            $site = $container->make('ProPhoto\Core\Model\Site\Site');
+            return $site->isRegistered();
+        } catch (Exception $e) {
+            return false;
+        }
     }
 }
