@@ -37,7 +37,7 @@ Click the link in the notice to start test driving. Once you click that link, yo
 
 ### Step 4: Database Backup Plugin
 
-Because ProPhoto 6 is still in beta, there is a chance that something could go wrong and you might need to restore a backup. If you choose to run P6 on your main production site, **you must be making regular backups of your database**.  If you are not already running a database backup plugin, follow these steps:
+Because ProPhoto 6 is still in beta, things may be moving and changing and you might need to restore a backup. If you choose to run P6 on your main production site, **you should be making regular backups of your database**.  If you are not already running a database backup plugin, follow these steps:
 
 1. Download [this plugin](https://github.com/matzko/wp-db-backup/archive/master.zip).
 2. In your WordPress admin area, go to "Plugins" > "Add New"
