@@ -1,4 +1,4 @@
-# ProPhoto Theme Test-drive Plugin
+# ProPhoto Theme Test-Drive Plugin
 
 Because ProPhoto 6 is such a radical departure from version 5, the transition process between the two versions is not as seamless as in prior upgrades. ProPhoto 6 is not able to import your existing ProPhoto 5 design, so *there will be some time required on your part to re-design and re-brand your website.*
 
