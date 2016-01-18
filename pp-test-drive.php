@@ -43,14 +43,14 @@ function pp_td_site_p6_ready() {
  * @return void
  */
 function pp_td_init() {
+    if (! current_user_can('edit_theme_options')) {
+        return;
+    }
+
     add_filter('template', 'pp_td_filter_active_theme');
     add_filter('stylesheet', 'pp_td_filter_active_stylesheet');
     add_filter('pp_classes_loaded', 'pp_td_p5_init');
     add_filter('pp_admin_middleware', 'pp_td_filter_admin_middleware');
-
-    if (! current_user_can('edit_theme_options')) {
-        return;
-    }
 
     if (isset($_GET['pp_td_test_drive'])) {
         update_option('pp_td_theme', 'prophoto6');
@@ -103,10 +103,6 @@ function pp_td_filter_active_stylesheet($stylesheet) {
  * @return string|false
  */
 function pp_td_determine_theme() {
-    if (! current_user_can('edit_theme_options')) {
-        return false;
-    }
-
     $tdTheme = get_option('pp_td_theme');
 
     return empty($tdTheme) ? false : $tdTheme;
