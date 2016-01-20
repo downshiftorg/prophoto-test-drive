@@ -9,8 +9,31 @@ Author URI: http://www.prophoto.com
 License: GPLv2
 */
 
-if (pp_td_theme_installed('prophoto5') && pp_td_theme_installed('prophoto6') && pp_td_site_p6_ready()) {
+if (pp_td_init_preconditions_met()) {
     add_action('plugins_loaded', 'pp_td_init');
+}
+
+/**
+ * Check all preconditions for running plugin
+ *
+ * @return boolean
+ */
+function pp_td_init_preconditions_met() {
+    if (! pp_td_theme_installed('prophoto5')) {
+        return false;
+    }
+
+    if (! pp_td_theme_installed('prophoto6')) {
+        return false;
+    }
+
+    // 6.0.0-beta15 included safeguard for updating test-driven theme
+    $p6Version = include(WP_CONTENT_DIR . '/themes/prophoto6/version.php');
+    if (version_compare('6.0.0-beta15', $p6Version) === 1) {
+        return false;
+    }
+
+    return pp_td_site_p6_ready();
 }
 
 /**
