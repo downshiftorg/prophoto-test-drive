@@ -2,7 +2,7 @@
 /*
 Plugin Name: ProPhoto Test Drive
 Plugin URI: https://github.com/netrivet/prophoto-test-drive
-Description: Test-drive and design with ProPhoto 6 while showing ProPhoto 5 to non-admin visitors
+Description: Test-drive and design with ProPhoto 6 while showing another theme to non-admin visitors
 Author: ProPhoto
 Version: 6.0.0
 Author URI: http://www.prophoto.com
@@ -19,31 +19,45 @@ if (pp_td_init_preconditions_met()) {
  * @return boolean
  */
 function pp_td_init_preconditions_met() {
-    if (! pp_td_theme_installed('prophoto5')) {
-        return false;
-    }
+    $p6 = pp_td_get_p6_theme();
 
-    if (! pp_td_theme_installed('prophoto6')) {
+    if (null === $p6) {
         return false;
     }
 
     // 6.0.0-beta15 included safeguard for updating test-driven theme
-    $p6Version = include(WP_CONTENT_DIR . '/themes/prophoto6/version.php');
+    $p6Version = include("{$p6->get_stylesheet_directory()}/version.php");
     if (version_compare('6.0.0-beta15', $p6Version) === 1) {
         return false;
     }
 
-    return pp_td_site_p6_ready();
+    return pp_td_site_is_p6_compatible();
 }
 
 /**
- * Does a theme exist with the directory name?
+ * Get the ProPhoto 6 Theme object
  *
- * @param string $themeDir
- * @return boolean
+ * The documentation for wp_get_themes() says it is expensive, so
+ * we cache the result with a local static variable for performance
+ *
+ * @return WP_Theme|null
  */
-function pp_td_theme_installed($themeDir) {
-    return file_exists(WP_CONTENT_DIR . "/themes/$themeDir/style.css");
+function pp_td_get_p6_theme() {
+    static $p6 = false;
+
+    if (false !== $p6) {
+        return $p6;
+    }
+
+    foreach (wp_get_themes() as $theme) {
+        if ((string) $theme === 'ProPhoto 6') {
+            $p6 = $theme;
+            return $p6;
+        }
+    }
+
+    $p6 = null;
+    return $p6;
 }
 
 /**
@@ -51,7 +65,7 @@ function pp_td_theme_installed($themeDir) {
  *
  * @return boolean
  */
-function pp_td_site_p6_ready() {
+function pp_td_site_is_p6_compatible() {
     $phpCompatible = function_exists('stream_supports_lock');
     $wpCompatible = function_exists('__return_empty_string');
     $gdCompatible = function_exists('imagecreatetruecolor');
@@ -72,28 +86,36 @@ function pp_td_init() {
 
     add_filter('template', 'pp_td_filter_active_theme');
     add_filter('stylesheet', 'pp_td_filter_active_stylesheet');
-    add_filter('pp_classes_loaded', 'pp_td_p5_init');
     add_filter('pp_admin_middleware', 'pp_td_filter_admin_middleware');
 
+    $p6 = pp_td_get_p6_theme();
+
     if (isset($_GET['pp_td_test_drive'])) {
-        update_option('pp_td_theme', 'prophoto6');
+        update_option('pp_td_theme', $p6->get_template());
+        return;
     }
 
     if (isset($_GET['pp_td_deactivate_td_mode'])) {
         delete_option('pp_td_theme');
+        return;
     }
 
     if (isset($_GET['pp_td_activate_p6'])) {
-        update_option('template', 'prophoto6');
-        update_option('stylesheet', 'prophoto6');
+        update_option('template', $p6->get_template());
+        update_option('stylesheet', $p6->get_stylesheet());
         delete_option('pp_td_theme');
+        return;
+    }
+
+    if (! get_option('pp_td_theme') && get_option('template') !== $p6->get_template()) {
+        add_filter('admin_init', 'pp_td_non_p6_init');
     }
 }
 
 /**
  * Filter the active theme
  *
- * @param string $activeTheme - directory of active theme (`prophoto5` or `prophoto6`)
+ * @param string $activeTheme
  * @return string
  */
 function pp_td_filter_active_theme($activeTheme) {
@@ -132,12 +154,12 @@ function pp_td_determine_theme() {
 }
 
 /**
- * Register function for showing ProPhoto 5 test-drive admin notice
+ * Register function for test-drive admin notices on other themes
  *
  * @return void
  */
-function pp_td_p5_init() {
-    add_action('admin_notices', 'pp_td_p5_admin_notice');
+function pp_td_non_p6_init() {
+    add_action('admin_notices', 'pp_td_offer_test_drive_admin_notice');
 }
 
 /**
@@ -152,20 +174,39 @@ function pp_td_filter_admin_middleware(array $adminMiddlewares) {
 }
 
 /**
- * The admin notice for ProPhoto 5
+ * Show an admin notice offering to allow test-driving P6 from another theme
  *
  * @return void
  */
-function pp_td_p5_admin_notice() {
+function pp_td_offer_test_drive_admin_notice() {
+    $currentThemeName = pp_td_get_current_theme_name();
     $activate = admin_url('themes.php?activated=true&pp_td_test_drive=prophoto6');
     $msg  = 'It looks like you have installed <b>ProPhoto 6</b>. ';
     $msg .= "<a href='$activate'>Click here</a> to activate it <em>only for logged-in admin users</em> ";
-    $msg .= 'while continuing to show <b>ProPhoto 5</b> to your normal site visitors.';
+    $msg .= "while continuing to show <b>$currentThemeName</b> to your normal site visitors.";
     echo pp_td_admin_notice($msg);
 }
 
 /**
- * Helper function for rendering a formatted admin notice in ProPhoto 5 or 6
+ * Get the name of the passed theme template, or current active theme
+ *
+ * ProPhoto 2-5 all use "ProPhoto" as the theme name, so
+ * append the major version for disambiguation
+ *
+ * @param string $template
+ * @return string
+ */
+function pp_td_get_current_theme_name($template = null) {
+    $theme = wp_get_theme($template);
+    if ((string) $theme === 'ProPhoto') {
+        return 'ProPhoto ' . intval($theme->get('Version'));
+    }
+
+    return (string) $theme;
+}
+
+/**
+ * Helper function for rendering a formatted admin notice
  *
  * @param string $msg
  * @return string
@@ -175,7 +216,7 @@ function pp_td_admin_notice($msg) {
 }
 
 /**
- * Helper function for rendering a formatted admin error in ProPhoto 5 or 6
+ * Helper function for rendering a formatted admin error
  *
  * @param string $msg
  * @return string
@@ -185,7 +226,7 @@ function pp_td_admin_error($msg) {
 }
 
 /**
- * Helper function for rendering a formatted admin message in ProPhoto 5 or 6
+ * Helper function for rendering a formatted admin message
  *
  * @param string $msg
  * @return string
@@ -204,7 +245,8 @@ class ProPhotoTestDriveAdminMiddleware
      */
     public function __construct()
     {
-        if (get_option('template') !== 'prophoto6') {
+        $p6 = pp_td_get_p6_theme();
+        if (get_option('template') !== $p6->get_template()) {
             add_action('admin_notices', array($this, 'addAdminNotice'));
         }
     }
@@ -228,9 +270,10 @@ class ProPhotoTestDriveAdminMiddleware
         }
 
         $activateP6 = admin_url('?pp_td_activate_p6=1');
+        $activeTheme = pp_td_get_current_theme_name(get_option('template'));
         $msg  = 'You are currently <b style="text-decoration: underline;">test-driving ProPhoto 6</b>. ';
         $msg .= 'Logged-in users can see and customize P6, but all normal ';
-        $msg .= 'site visitors will see your P5 site. ';
+        $msg .= "site visitors will see your site with the <b>$activeTheme theme</b> active. ";
         $msg .= "<a href='$deactivateTdMode'>Click here</a> to switch out of test-drive mode, or ";
         $msg .= "<a href='$activateP6'>here</a> to fully activate P6 for all users.";
         echo pp_td_admin_notice($msg);
@@ -247,7 +290,11 @@ class ProPhotoTestDriveAdminMiddleware
     protected function p6SiteRegistered()
     {
         try {
-            $container = include(WP_CONTENT_DIR . '/themes/prophoto6/services.php');
+            $p6 = pp_td_get_p6_theme();
+            $container = include("{$p6->get_stylesheet_directory()}/services.php");
+            if (! $container) {
+                return false;
+            }
             $site = $container->make('ProPhoto\Core\Model\Site\Site');
             return $site->isRegistered();
         } catch (Exception $e) {
