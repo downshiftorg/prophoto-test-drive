@@ -1,5 +1,7 @@
 # ProPhoto Theme Test-Drive Plugin
 
+**NOTE: Although the directions below are directed towards P5 users, this plugin works with any other theme, including P4.**
+
 Because ProPhoto 6 is such a radical departure from version 5, the transition process between the two versions is not as seamless as in prior upgrades. ProPhoto 6 is not able to import your existing ProPhoto 5 design, so *there will be some time required on your part to re-design and re-brand your website.*
 
 Because of this, we've created this plugin which allows you to keep ProPhoto 5 active *(showing it to all your site's visitors)* while you *(just logged-in admins)* see and use and customize ProPhoto 6.
