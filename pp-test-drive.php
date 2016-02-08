@@ -28,10 +28,17 @@ function pp_td_init_preconditions_met() {
     // 6.0.0-beta15 included safeguard for updating test-driven theme
     $p6Version = include("{$p6->get_stylesheet_directory()}/version.php");
     if (version_compare('6.0.0-beta15', $p6Version) === 1) {
+        add_action('all_admin_notices', 'pp_td_old_zip_notice');
         return false;
     }
 
-    return pp_td_site_is_p6_compatible();
+    if (pp_td_site_is_p6_compatible()) {
+        return true;
+    }
+
+    add_action('all_admin_notices', 'pp_td_incapable_notice');
+
+    return false;
 }
 
 /**
@@ -203,6 +210,29 @@ function pp_td_get_current_theme_name($template = null) {
     }
 
     return (string) $theme;
+}
+
+/**
+ * Render an error message for users who cannot test-drive because of PHP 5.2
+ *
+ * @return void
+ */
+function pp_td_incapable_notice() {
+    $msg  = 'Your site is <b>not capable of running ProPhoto 6</b>. This is almost always caused ';
+    $msg .= 'by running a version of PHP below 5.3. Please contact your webhost tech support ';
+    $msg .= 'and ask them to upgrade you to <b>at least PHP 5.3</b> <em>(5.5 or 5.6 is ideal)</em>.';
+    echo pp_td_admin_error($msg);
+}
+
+/**
+ * Render an error message for users with < beta15 installed
+ *
+ * @return void
+ */
+function pp_td_old_zip_notice() {
+    $msg  = 'The ProPhoto 6 build you have installed is <b>too old to be test-driven safely</b>. ';
+    $msg .= 'Please contact ProPhoto support to get a more recent zip file to replace it.';
+    echo pp_td_admin_error($msg);
 }
 
 /**
