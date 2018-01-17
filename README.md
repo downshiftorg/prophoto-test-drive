@@ -14,7 +14,7 @@ To start, leave ProPhoto 5 as your active theme.  Install this plugin by followi
 
 1. In your WordPress admin area, go to "Plugins" > "Add New"
 2. On the top of that screen, click "Upload Plugin" button
-3. Download the zip file of this plugin by [clicking here](https://github.com/netrivet/prophoto-test-drive/archive/master.zip).
+3. Download the zip file of this plugin by [clicking here](https://github.com/downshiftorg/prophoto-test-drive/archive/master.zip).
 4. Upload the plugin zip file you just downloaded *(`prophoto-test-drive-master.zip`)*
 5. After upload, click to activate the plugin
 

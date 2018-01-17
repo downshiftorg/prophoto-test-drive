@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ProPhoto Test Drive
-Plugin URI: https://github.com/netrivet/prophoto-test-drive
+Plugin URI: https://github.com/downshiftorg/prophoto-test-drive
 Description: Test-drive and design with ProPhoto 6 while showing another theme to non-admin visitors
 Author: ProPhoto
 Version: 6.0.0
